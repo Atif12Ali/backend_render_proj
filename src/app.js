@@ -75,10 +75,17 @@ const allowedOrigins = [
   "http://localhost:3000"
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or Postman)
-    if (!origin) return callback(null, true);
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     // Allow requests with no origin (like mobile apps or Postman)
+//     if (!origin) return callback(null, true);
+
+    app.use(cors({
+  origin: true, // This reflects the request origin, essentially allowing everything
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
     // Check if origin is in our list OR is any Vercel subdomain
     const isAllowed = allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
