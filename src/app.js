@@ -66,25 +66,33 @@ const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 
-// 1. DEFINE OPTIONS ONCE
+// 1. DEFINE CORS OPTIONS - FIXED VERSION
+const allowedOrigins = [
+  'https://frontend-versal-proj-br47.vercel.app',
+  'http://localhost:3000',  // For local development
+  'http://localhost:5173'   // If using Vite
+];
+
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (Postman/Mobile)
+    // Allow requests with no origin (like Postman, mobile apps)
     if (!origin) return callback(null, true);
     
-    // Mirror the origin back to satisfy 'credentials: true'
-    // This effectively allows any origin while being compatible with credentials
-    callback(null, true);
+    // Check if the origin is allowed
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  optionsSuccessStatus: 200 // Some older browsers choke on 204
+  optionsSuccessStatus: 200
 };
 
-// 2. APPLY CORS (Must be before routes)
+// 2. APPLY CORS
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Handle preflight globally
 
 // 3. MIDDLEWARE
 app.use(express.json());
