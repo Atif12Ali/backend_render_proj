@@ -11,8 +11,16 @@ const app = express();
 
 
 app.use(express.json());
+// app.use(cors({
+//   origin: "https://frontend-versal-proj.vercel.app", // Your Vercel URL
+//   credentials: true
+// }));
+
 app.use(cors({
-  origin: "https://frontend-versal-proj.vercel.app", // Your Vercel URL
+  origin: [
+    "https://frontend-versal-proj.vercel.app",
+    "https://frontend-versal-proj-oqrm.vercel.app" // Add this new one!
+  ],
   credentials: true
 }));
 app.use(express.static("public"));
