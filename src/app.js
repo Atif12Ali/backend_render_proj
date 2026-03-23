@@ -66,35 +66,31 @@ const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 
-// 1. CORS CONFIG
-const allowedOrigins = [
-  "https://frontend-versal-proj.vercel.app",
-  "https://frontend-versal-proj-oqrm.vercel.app",
-];
-
+// 1. DEFINE OPTIONS ONCE
 const corsOptions = {
   origin: function (origin, callback) {
+    // Allow requests with no origin (Postman/Mobile)
     if (!origin) return callback(null, true);
-    const isAllowed = allowedOrigins.includes(origin) || origin.endsWith(".vercel.app");
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
+    
+    // Mirror the origin back to satisfy 'credentials: true'
+    // This effectively allows any origin while being compatible with credentials
+    callback(null, true);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200 // Some older browsers choke on 204
 };
 
+// 2. APPLY CORS (Must be before routes)
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // preflight
+app.options("*", cors(corsOptions)); // Handle preflight globally
 
-// 2. MIDDLEWARE
+// 3. MIDDLEWARE
 app.use(express.json());
 app.use(express.static("public"));
 
-// 3. ROUTES
+// 4. ROUTES
 app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
@@ -106,7 +102,7 @@ app.get("/", (req, res) => {
   res.send("Guest House API is running...");
 });
 
-// 4. ERROR HANDLING
+// 5. ERROR HANDLING
 app.use(errorHandler);
 
 module.exports = app;
