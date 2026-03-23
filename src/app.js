@@ -16,10 +16,19 @@ app.use(express.json());
 //   credentials: true
 // }));
 
+// app.use(cors({
+//   origin: [
+//     "https://frontend-versal-proj.vercel.app",
+//     "https://frontend-versal-proj-oqrm.vercel.app" // Add this new one!
+//   ],
+//   credentials: true
+// }));
+
 app.use(cors({
   origin: [
-    "https://frontend-versal-proj.vercel.app",
-    "https://frontend-versal-proj-oqrm.vercel.app" // Add this new one!
+    "https://frontend-versal-proj.vercel.app", 
+    "https://frontend-versal-proj-oqrm.vercel.app",
+    "https://frontend-versal-proj-br47-jw7gg8bkz-atif12alis-projects.vercel.app" // Add this one from your screenshot!
   ],
   credentials: true
 }));
