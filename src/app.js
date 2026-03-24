@@ -66,33 +66,31 @@ const contactRoutes = require("./routes/contactRoutes");
 
 const app = express();
 
-// 1. DEFINE CORS OPTIONS - FIXED VERSION
-const allowedOrigins = [
-  'https://frontend-versal-proj-br47.vercel.app',
-  'http://localhost:3000',  // For local development
-  'http://localhost:5173'   // If using Vite
-];
-
+// 1. DYNAMIC CORS OPTIONS - FIXES VERCEL URL CHANGES
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like Postman, mobile apps)
+    // Allow requests with no origin (like Postman)
     if (!origin) return callback(null, true);
-    
-    // Check if the origin is allowed
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+
+    // This checks if the URL ends with '.vercel.app' or is localhost
+    const isVercel = /\.vercel\.app$/.test(origin);
+    const isLocal = origin.includes("localhost");
+
+    if (isVercel || isLocal) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
   optionsSuccessStatus: 200
 };
 
-// 2. APPLY CORS
+// 2. APPLY CORS & PREFLIGHT
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Explicitly handle preflight for all routes
 
 // 3. MIDDLEWARE
 app.use(express.json());
@@ -113,4 +111,5 @@ app.get("/", (req, res) => {
 // 5. ERROR HANDLING
 app.use(errorHandler);
 
+module.exports = app;
 module.exports = app;
