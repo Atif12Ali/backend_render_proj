@@ -57,6 +57,7 @@
 
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose"); // Add this import
 const errorHandler = require("./middlewares/errorMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const roomRoutes = require("./routes/roomRoutes");
@@ -123,7 +124,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// 5. ROUTES - BOTH PATTERNS INCLUDED FOR COMPATIBILITY
+// 5. ROUTES
 // Health Check
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -132,6 +133,7 @@ app.get("/", (req, res) => {
     timestamp: new Date().toISOString(),
     endpoints: {
       health: "GET /",
+      test: "GET /api/test",
       auth: "/api/auth",
       rooms: "/api/rooms",
       bookings: "/api/bookings",
@@ -139,6 +141,59 @@ app.get("/", (req, res) => {
       contact: "/api/contact"
     }
   });
+});
+
+// TEST ENDPOINT - Add this to debug database connection
+app.get("/api/test", async (req, res) => {
+  try {
+    // Check MongoDB connection status
+    const dbStatus = mongoose.connection.readyState;
+    const dbStatusText = {
+      0: "disconnected",
+      1: "connected",
+      2: "connecting",
+      3: "disconnecting"
+    }[dbStatus];
+    
+    // Try to list all collections if connected
+    let collections = [];
+    if (dbStatus === 1) {
+      try {
+        collections = await mongoose.connection.db.listCollections().toArray();
+        collections = collections.map(c => c.name);
+      } catch (err) {
+        collections = ["Error listing collections: " + err.message];
+      }
+    }
+    
+    res.json({
+      status: "ok",
+      timestamp: new Date().toISOString(),
+      server: {
+        uptime: process.uptime(),
+        node_version: process.version,
+        environment: process.env.NODE_ENV || "development"
+      },
+      database: {
+        status: dbStatusText,
+        readyState: dbStatus,
+        name: mongoose.connection.name || "Not connected",
+        host: mongoose.connection.host || "Not connected",
+        collections: collections
+      },
+      cors: {
+        enabled: true,
+        allowed_origins_patterns: [".vercel.app", "localhost", ".railway.app"]
+      }
+    });
+  } catch (error) {
+    console.error("Error in /api/test:", error);
+    res.status(500).json({ 
+      error: "Test endpoint failed",
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
 });
 
 // API Routes with /api prefix
@@ -149,7 +204,6 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/contact", contactRoutes);
 
 // ALSO support routes without /api prefix (for backward compatibility)
-// This redirects requests from /rooms to /api/rooms
 app.use("/rooms", (req, res, next) => {
   console.log(`Redirecting ${req.method} /rooms to /api/rooms`);
   req.url = `/api/rooms${req.url === '/' ? '' : req.url}`;
@@ -180,6 +234,7 @@ app.use((req, res) => {
     message: `Route ${req.url} not found`,
     availableEndpoints: [
       "GET /",
+      "GET /api/test",
       "GET /api/rooms",
       "POST /api/auth/register",
       "POST /api/auth/login",
